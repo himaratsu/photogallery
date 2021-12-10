@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MicroCMS Demo',
+      title: 'Photo Gallery',
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
@@ -34,6 +35,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Photo> items = [];
   Photo? showingPhoto;
+  Photo? hoverPhoto;
 
   @override
   void initState() {
@@ -43,97 +45,162 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var list = items.map((item) => _photoNetworkItem(item)).toList();
+    List<Widget> list = [
+      const SizedBox(height: 96),
+      const SelectableText(
+      "Photo by X100V",
+      style: TextStyle(
+          fontSize: 12,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic),
+    ),
+    const SizedBox(height: 108)];
+    list.addAll(items.map((item) => _photoNetworkItem(item)).toList());
 
-    var grid = GridView.count(
-        crossAxisCount: 6,
-        children: list
-    );
-    var rows = Container(child: Column(
+    var grid = GridView.count(crossAxisCount: 6, children: list);
+    var rows = Container(
+        child: Column(
       children: list,
     ));
     return Scaffold(
         appBar: null,
         body: Stack(
           alignment: Alignment.center,
-          children: [SingleChildScrollView(child: Container(child: rows,
-            padding: EdgeInsets.only(top: 128),
-            color: Colors.black,
-            alignment: Alignment.center,
-          ),
-          ),
-            if (showingPhoto != null) _expantionItem(showingPhoto!),
+          children: [
+            SingleChildScrollView(
+              child: Container(
+                child: rows,
+                color: Colors.black,
+                alignment: Alignment.center,
+              ),
+            ),
+            if (showingPhoto != null) _expantionItem(showingPhoto!, context),
           ],
-        )
-    );
+        ));
   }
 
-  Widget _expantionItem(Photo photo) {
-    return GestureDetector(child: Container(child:
-    Column(children: [
-      Image.network(photo.photo.toString(),
-          fit: BoxFit.fitWidth,
-          width: 540),
-      const SizedBox(height: 24),
-      Text(photo.caption, style: TextStyle(
-        // fontWeight: FontWeight.bold,
-        fontSize: 14,
-        color: Colors.white,
+  Widget _expantionItem(Photo photo, BuildContext context) {
+    double width = 720;
+    double height = (width * 4160 / 6240);
+    return Positioned.fill(
+      child: GestureDetector(
+        child: Container(
+          child: Align(
+            alignment: Alignment.center,
+            child: GestureDetector(
+              onTap: () {
+                // do nothing
+              },
+              child: SizedBox(
+                height: height + 32 + 40 + 32 + 20, //自分自身の高さ
+                child: Column(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        border: Border.all(color: Colors.white, width: 8),
+                      ),
+                      width: width,
+                      height: height,
+                      child: Image.network(photo.getImageUrl(width),
+                          fit: BoxFit.fitWidth, width: width),
+                    ),
+                    const SizedBox(height: 32),
+                    SelectableText(
+                      photo.caption,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          showingPhoto = null;
+                        });
+                      },
+                      child: const Text(
+                        "back",
+                        style: TextStyle(
+                          color: Colors.white,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+          color: Colors.black.withOpacity(0.9),
+        ),
+        // alignment: Alignment.center,
+        // padding: EdgeInsets.only(top: 256)),
+        onTap: () {
+          setState(() {
+            showingPhoto = null;
+          });
+        },
       ),
-      ),
-    ],
-    ),
-        color: Colors.black87,
-        alignment: Alignment.center,
-        padding: EdgeInsets.only(top: 256)
-    ),
-      onTap: () {
-        setState(() {
-          showingPhoto = null;
-        });
-      },
     );
   }
 
   Widget _photoNetworkItem(Photo photo) {
-    return
-      GestureDetector(child:
-      Padding(child:
-      Column(children: [
-        Image.network(photo.photo.toString(),
-            fit: BoxFit.fitWidth,
-            width: 320),
-        const SizedBox(height: 16),
-        Text(photo.caption, style: TextStyle(
-          // fontWeight: FontWeight.bold,
-          fontSize: 12,
-          color: Colors.white,
-        ),
-        ),
-      ],
-      ),
-        padding: EdgeInsets.only(bottom: 72),
-      ),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() {
+          hoverPhoto = photo;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          hoverPhoto = null;
+        });
+      },
+      child: GestureDetector(
+          child: Padding(
+            child: Transform.scale(
+              scale: hoverPhoto == photo ? 1.1 : 1.0,
+              child: Column(
+                children: [
+                  Image.network(photo.getImageUrl(320),
+                      fit: BoxFit.fitWidth, width: 320),
+                  const SizedBox(height: 16),
+                  SelectableText(
+                    photo.caption,
+                    style: TextStyle(
+                      // fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.only(bottom: 72),
+          ),
           onTap: () {
             setState(() {
               showingPhoto = photo;
             });
-          }
-      );
+          }),
+    );
   }
 
   void _loadListItem() async {
     var url = Uri.parse("https://himaratsu-photos.microcms.io/api/v1/photos");
-    final result = await http.get(
-        url,
-        headers: {
-          "X-MICROCMS-API-KEY": '36a41bef898f45ec95f0cf882d9fd7a933c4'
-        });
+    final result = await http.get(url, headers: {
+      "X-MICROCMS-API-KEY": '36a41bef898f45ec95f0cf882d9fd7a933c4'
+    });
     var contents = json.decode(result.body)["contents"];
     //     .map((content) => content["photo"]["url"]).toList();
     // var newItems = List<String>.from(items);
 
-    var myContents = contents.map((content) => Photo.fromJSON(content)).toList();
+    var myContents =
+        contents.map((content) => Photo.fromJSON(content)).toList();
     var newItems = List<Photo>.from(myContents);
 
     setState(() {
@@ -153,4 +220,8 @@ class Photo {
         caption = json['caption'],
         publishedAt = DateTime.parse(json['publishedAt']),
         photo = Uri.parse(json['photo']['url']);
+
+  String getImageUrl(width) {
+    return photo.toString() + "?width=$width";
+  }
 }
