@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.white,
       ),
       value: selectedCategory,
-      items: <String>['Kyoto', 'Ito', 'Other'].map((String value) {
+      items: <String>['Kyoto', 'Kobe', 'Ito', 'Other'].map((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value,
@@ -183,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Positioned.fill(
       child: GestureDetector(
         child: Container(
-          color: Colors.black.withOpacity(0.92),
+          color: Colors.black.withOpacity(0.87),
           child: Align(
             alignment: Alignment.center,
             child: GestureDetector(
