@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:html' as html;
 
 void main() {
   runApp(const MyApp());
@@ -37,55 +41,149 @@ class _MyHomePageState extends State<MyHomePage> {
   Photo? showingPhoto;
   Photo? hoverPhoto;
 
+  String selectedCategory = "Kyoto";
+
   @override
   void initState() {
-    _loadListItem();
+    _fetch();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> list = [
-      const SizedBox(height: 96),
-      const SelectableText(
-      "Photo by X100V",
-      style: TextStyle(
-          fontSize: 12,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontStyle: FontStyle.italic),
-    ),
-    const SizedBox(height: 108)];
-    list.addAll(items.map((item) => _photoNetworkItem(item)).toList());
+    List<Widget> list =
+        items.map((item) => _simplePhotoNetworkItem(item)).toList();
+    var grid = GridView.extent(
+        maxCrossAxisExtent: 132,
+        padding: const EdgeInsets.all(4),
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
+        children: list);
 
-    var grid = GridView.count(crossAxisCount: 6, children: list);
-    var rows = Container(
-        child: Column(
-      children: list,
-    ));
-    return Scaffold(
-        appBar: null,
-        body: Stack(
-          alignment: Alignment.center,
-          children: [
-            SingleChildScrollView(
-              child: Container(
-                child: rows,
-                color: Colors.black,
-                alignment: Alignment.center,
+    var dropdown = DropdownButton<String>(
+      dropdownColor: Colors.black87,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      value: selectedCategory,
+      items: <String>['Kyoto', 'Ito', 'Other'].map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              )),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          selectedCategory = value!;
+        });
+        _fetch();
+      },
+    );
+    var header = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.ideographic,
+      children: [
+        const Text(
+          "Photo of ",
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        SizedBox(width: 8),
+        dropdown
+      ],
+    );
+
+    var hoge = Column(
+      children: [
+        const SizedBox(height: 96),
+        // dropdown,
+        header,
+        const SizedBox(height: 72),
+        Expanded(child: grid),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            child: Container(
+              child: const FaIcon(
+                FontAwesomeIcons.twitter,
+                color: Colors.white,
+                size: 24,
               ),
+              padding: const EdgeInsets.only(bottom: 32),
             ),
-            if (showingPhoto != null) _expantionItem(showingPhoto!, context),
-          ],
-        ));
+            onTap: () {
+              html.window.open('https://twitter.com/himara2', 'new tab');
+            },
+          ),
+        ),
+      ],
+    );
+
+    return Scaffold(
+      appBar: null,
+      body: Stack(children: [
+        Container(
+          alignment: Alignment.center,
+          child: SizedBox(width: 720, child: hoge),
+        ),
+        if (showingPhoto != null) _expansionItem(showingPhoto!, context),
+      ]),
+      backgroundColor: Colors.black.withOpacity(0.92),
+    );
   }
 
-  Widget _expantionItem(Photo photo, BuildContext context) {
+  Widget _simplePhotoNetworkItem(Photo photo) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() {
+          hoverPhoto = photo;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          hoverPhoto = null;
+        });
+      },
+      child: GestureDetector(
+        child: Transform.scale(
+          scale: 1.0,
+          child: Opacity(
+            opacity: photo == hoverPhoto ? 0.6 : 1.0,
+            child: Image.network(
+              photo.getImageUrl(320),
+              fit: BoxFit.cover,
+              width: 320,
+            ),
+          ),
+        ),
+        onTap: () {
+          setState(
+            () {
+              showingPhoto = photo;
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _expansionItem(Photo photo, BuildContext context) {
     double width = 720;
     double height = (width * 4160 / 6240);
     return Positioned.fill(
       child: GestureDetector(
         child: Container(
+          color: Colors.black.withOpacity(0.92),
           child: Align(
             alignment: Alignment.center,
             child: GestureDetector(
@@ -104,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       width: width,
                       height: height,
                       child: Image.network(photo.getImageUrl(width),
-                          fit: BoxFit.fitWidth, width: width),
+                          fit: BoxFit.cover, width: width),
                     ),
                     const SizedBox(height: 32),
                     SelectableText(
@@ -134,7 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          color: Colors.black.withOpacity(0.9),
+          // color: Colors.black.withOpacity(0.9),
         ),
         // alignment: Alignment.center,
         // padding: EdgeInsets.only(top: 256)),
@@ -147,57 +245,14 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _photoNetworkItem(Photo photo) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) {
-        setState(() {
-          hoverPhoto = photo;
-        });
-      },
-      onExit: (_) {
-        setState(() {
-          hoverPhoto = null;
-        });
-      },
-      child: GestureDetector(
-          child: Padding(
-            child: Transform.scale(
-              scale: hoverPhoto == photo ? 1.1 : 1.0,
-              child: Column(
-                children: [
-                  Image.network(photo.getImageUrl(320),
-                      fit: BoxFit.fitWidth, width: 320),
-                  const SizedBox(height: 16),
-                  SelectableText(
-                    photo.caption,
-                    style: TextStyle(
-                      // fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            padding: EdgeInsets.only(bottom: 72),
-          ),
-          onTap: () {
-            setState(() {
-              showingPhoto = photo;
-            });
-          }),
-    );
-  }
-
-  void _loadListItem() async {
-    var url = Uri.parse("https://himaratsu-photos.microcms.io/api/v1/photos");
+  void _fetch() async {
+    var lowerCategory = selectedCategory.toLowerCase();
+    var url = Uri.parse(
+        "https://himaratsu-photos.microcms.io/api/v1/photos?limit=50&filters=category%5Bequals%5D$lowerCategory");
     final result = await http.get(url, headers: {
       "X-MICROCMS-API-KEY": '36a41bef898f45ec95f0cf882d9fd7a933c4'
     });
     var contents = json.decode(result.body)["contents"];
-    //     .map((content) => content["photo"]["url"]).toList();
-    // var newItems = List<String>.from(items);
 
     var myContents =
         contents.map((content) => Photo.fromJSON(content)).toList();
