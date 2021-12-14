@@ -123,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         header,
         const SizedBox(height: 72),
         Expanded(child: grid),
+        const SizedBox(height: 32),
         MouseRegion(
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
