@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '🎞 himara2 Films',
+      title: '🎞 hims Films',
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
@@ -36,17 +36,31 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   List<Photo> items = [];
   Photo? showingPhoto;
   Photo? hoverPhoto;
 
   String selectedCategory = "Kyoto";
 
+  late AnimationController _animationController;
+
   @override
   void initState() {
     _fetch();
+
+    _animationController = AnimationController(
+        duration: const Duration(milliseconds: 230),
+        vsync: this);
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -178,70 +192,90 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _expansionItem(Photo photo, BuildContext context) {
+    final animation = Tween<double>(begin: 0.0, end: 1.0)
+
+        /// アニメーションのカーブを設定します。
+        /// `CurvedAnimation`の`parent`には`AnimationController`を渡します。
+        /// `curve`に描きたいカーブの形を指定します。ここでは`Curves.fastOutSlowIn`を指定します。
+        /// 参考: https://api.flutter.dev/flutter/animation/Curves/fastOutSlowIn-constant.html
+        .animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.forward(from: 0.0);
+
     double width = 720;
     double height = (width * 4160 / 6240);
-    return Positioned.fill(
-      child: GestureDetector(
-        child: Container(
-          color: Colors.black.withOpacity(0.87),
-          child: Align(
-            alignment: Alignment.center,
-            child: GestureDetector(
-              onTap: () {
-                // do nothing
-              },
-              child: SizedBox(
-                height: height + 32 + 40 + 32 + 20, //自分自身の高さ
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        border: Border.all(color: Colors.white, width: 8),
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (BuildContext context, Widget? child) {
+        return Positioned.fill(
+          child: GestureDetector(
+            child: FadeTransition(
+              opacity: animation,
+              child: Container(
+                color: Colors.black.withOpacity(0.87),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: GestureDetector(
+                    onTap: () {
+                      // do nothing
+                    },
+                    child: SizedBox(
+                      height: height + 32 + 40 + 32 + 20, //自分自身の高さ
+                      child: Column(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              border: Border.all(color: Colors.white, width: 8),
+                            ),
+                            width: width,
+                            height: height,
+                            child: Image.network(photo.getImageUrl(width),
+                                fit: BoxFit.cover, width: width),
+                          ),
+                          const SizedBox(height: 32),
+                          SelectableText(
+                            photo.caption,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                showingPhoto = null;
+                              });
+                            },
+                            child: const Text(
+                              "back",
+                              style: TextStyle(
+                                color: Colors.white,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          )
+                        ],
                       ),
-                      width: width,
-                      height: height,
-                      child: Image.network(photo.getImageUrl(width),
-                          fit: BoxFit.cover, width: width),
                     ),
-                    const SizedBox(height: 32),
-                    SelectableText(
-                      photo.caption,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          showingPhoto = null;
-                        });
-                      },
-                      child: const Text(
-                        "back",
-                        style: TextStyle(
-                          color: Colors.white,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    )
-                  ],
+                  ),
                 ),
-              ),
+              ), // color: Colors.black.withOpacity(0.9),
             ),
+            // alignment: Alignment.center,
+            // padding: EdgeInsets.only(top: 256)),
+            onTap: () {
+              setState(() {
+                showingPhoto = null;
+              });
+            },
           ),
-          // color: Colors.black.withOpacity(0.9),
-        ),
-        // alignment: Alignment.center,
-        // padding: EdgeInsets.only(top: 256)),
-        onTap: () {
-          setState(() {
-            showingPhoto = null;
-          });
-        },
-      ),
+        );
+      },
     );
   }
 
