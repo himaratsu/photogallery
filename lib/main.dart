@@ -67,7 +67,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var isSmallDevice = width <= 500;
-    print("isSmallDevice? -> $isSmallDevice");
 
     List<Widget> list =
         items.map((item) => _simplePhotoNetworkItem(item)).toList();
@@ -198,11 +197,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget _expansionItem(Photo photo, BuildContext context) {
     final animation = Tween<double>(begin: 0.0, end: 1.0)
-
-        /// アニメーションのカーブを設定します。
-        /// `CurvedAnimation`の`parent`には`AnimationController`を渡します。
-        /// `curve`に描きたいカーブの形を指定します。ここでは`Curves.fastOutSlowIn`を指定します。
-        /// 参考: https://api.flutter.dev/flutter/animation/Curves/fastOutSlowIn-constant.html
         .animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
