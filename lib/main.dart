@@ -65,6 +65,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
+    var isSmallDevice = width <= 500;
+    print("isSmallDevice? -> $isSmallDevice");
+
     List<Widget> list =
         items.map((item) => _simplePhotoNetworkItem(item)).toList();
     var grid = GridView.extent(
@@ -111,17 +115,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             fontStyle: FontStyle.italic,
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         dropdown
       ],
     );
 
-    var hoge = Column(
+    var column = Column(
       children: [
-        const SizedBox(height: 96),
+        SizedBox(height: isSmallDevice ? 40 : 96),
         // dropdown,
         header,
-        const SizedBox(height: 72),
+        SizedBox(height: isSmallDevice ? 32 : 72),
         Expanded(child: grid),
         const SizedBox(height: 32),
         MouseRegion(
@@ -148,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       body: Stack(children: [
         Container(
           alignment: Alignment.center,
-          child: SizedBox(width: 720, child: hoge),
+          child: SizedBox(width: 720, child: column),
         ),
         if (showingPhoto != null) _expansionItem(showingPhoto!, context),
       ]),
