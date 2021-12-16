@@ -19,10 +19,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '🎞 hims Films',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const MyHomePage(title: 'Photo Gallery'),
+      theme: ThemeData.dark(),
+      home: const MyHomePage(title: 'hims films'),
     );
   }
 }
@@ -151,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       body: Stack(children: [
         Container(
           alignment: Alignment.center,
-          child: SizedBox(width: 720, child: column),
+          child: SizedBox(width: 720 * 2, child: column),
         ),
         if (showingPhoto != null) _expansionItem(showingPhoto!, context),
       ]),
@@ -204,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     _animationController.forward(from: 0.0);
 
-    double width = 720;
+    double width = 720 * 2;
     double height = (width * 4160 / 6240);
     return AnimatedBuilder(
       animation: _animationController,
