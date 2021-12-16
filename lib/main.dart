@@ -149,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       body: Stack(children: [
         Container(
           alignment: Alignment.center,
-          child: SizedBox(width: 720 * 2, child: column),
+          child: SizedBox(width: 720, child: column),
         ),
         if (showingPhoto != null) _expansionItem(showingPhoto!, context),
       ]),
@@ -202,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     _animationController.forward(from: 0.0);
 
-    double width = 720 * 2;
+    double width = 720;
     double height = (width * 4160 / 6240);
     return AnimatedBuilder(
       animation: _animationController,
@@ -230,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             ),
                             width: width,
                             height: height,
-                            child: Image.network(photo.getImageUrl(width),
+                            child: Image.network(photo.getImageUrl(width * 2),
                                 fit: BoxFit.cover, width: width),
                           ),
                           const SizedBox(height: 32),
