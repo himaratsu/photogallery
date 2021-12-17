@@ -230,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             ),
                             width: width,
                             height: height,
-                            child: Image.network(photo.getImageUrl(width * 2),
+                            child: Image.network(photo.getImageUrl(width * 1.5),
                                 fit: BoxFit.cover, width: width),
                           ),
                           const SizedBox(height: 32),
