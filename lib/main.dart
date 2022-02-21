@@ -41,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   bool switchPhotoContextOpen = true;
   Photo? hoverPhoto;
 
-  String selectedCategory = "Kyoto";
+  String selectedCategory = "NewYear2022";
 
   late AnimationController _animationController;
 
@@ -83,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         color: Colors.white,
       ),
       value: selectedCategory,
-      items: <String>['Kyoto', 'Kobe', 'Ito', 'Other'].map((String value) {
+      items: <String>['NewYear2022', 'Kyoto', 'Kobe', 'Ito', 'Other'].map((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value,
