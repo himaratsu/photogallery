@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:html' as html;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,6 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'dart:html' as html;
 
 void main() {
   runApp(const MyApp());
@@ -44,6 +44,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   String selectedCategory = "NewYear2022";
 
   late AnimationController _animationController;
+
+  double photoWidth = 360;
 
   @override
   void initState() {
@@ -227,7 +229,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       // do nothing
                     },
                     child: SizedBox(
-                      height: height + 32 + 40 + 32 + 20, //自分自身の高さ
+                      height: height + 32 + 40 + 32 + 20 + 24, //自分自身の高さ
                       child: Column(
                         children: [
                           Container(
@@ -240,10 +242,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             child: Stack(
                               children: <Widget>[
                                 Positioned.fill(
-                                  child: Image.network(
-                                      photo.getImageUrl(width * 1.5),
-                                      fit: BoxFit.cover,
-                                      width: width),
+                                  child: Image.network(photo.getImageUrl(width),
+                                      fit: BoxFit.cover, width: width),
                                 ),
                                 if (_shouldShowPrev())
                                   Positioned.fill(
@@ -288,7 +288,31 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 2),
+                          Container(
+                            alignment: Alignment.centerRight,
+                            width: 720,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 0),
+                              child: Opacity(
+                                opacity: 0.54,
+                                child: TextButton(
+                                  onPressed: () {
+                                    _openImageLink(photo);
+                                  },
+                                  child: const Text(
+                                    "[Original]",
+                                    style: TextStyle(
+                                      // fontStyle: FontStyle.italic,
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
                           SelectableText(
                             photo.caption,
                             style: const TextStyle(
@@ -385,6 +409,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
+  void _openImageLink(Photo photo) {
+    html.window.open(photo.getImageUrl(1980), 'new tab');
+  }
+
   void _fetch() async {
     var lowerCategory = selectedCategory.toLowerCase();
     var url = Uri.parse(
@@ -417,6 +445,6 @@ class Photo {
         photo = Uri.parse(json['photo']['url']);
 
   String getImageUrl(width) {
-    return photo.toString() + "?width=$width";
+    return photo.toString() + "?width=$width&q=75";
   }
 }
