@@ -37,11 +37,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   List<Photo> photos = [];
+  List<Category> categories = [];
   Photo? showingPhoto;
   bool switchPhotoContextOpen = true;
   Photo? hoverPhoto;
 
-  String selectedCategory = "NewYear2022";
+  Category? selectedCategory;
 
   late AnimationController _animationController;
 
@@ -49,7 +50,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    _fetch();
+    _fetchCategories();
 
     _animationController = AnimationController(
         duration: const Duration(milliseconds: 230), vsync: this);
@@ -66,6 +67,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (selectedCategory == null) {
+      return Scaffold(
+        appBar: null,
+        backgroundColor: Colors.black.withOpacity(0.92),
+      );
+    }
     var width = MediaQuery.of(context).size.width;
     var isSmallDevice = width <= 500;
 
@@ -78,18 +85,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         crossAxisSpacing: 4,
         children: list);
 
-    var dropdown = DropdownButton<String>(
+    var dropdown = DropdownButton<Category>(
       dropdownColor: Colors.black87,
       style: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       value: selectedCategory,
-      items: <String>['NewYear2022', 'Kyoto', 'Kobe', 'Ito', 'Other']
-          .map((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value,
+      items: categories.map((Category category) {
+        return DropdownMenuItem<Category>(
+          value: category,
+          child: Text(category.name,
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -413,8 +419,28 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     html.window.open(photo.getImageUrl(1980), 'new tab');
   }
 
+  void _fetchCategories() async {
+    var url =
+        Uri.parse("https://himaratsu-photos.microcms.io/api/v1/categories");
+    final result = await http.get(url, headers: {
+      "X-MICROCMS-API-KEY": '36a41bef898f45ec95f0cf882d9fd7a933c4'
+    });
+    var contents = json.decode(result.body)["contents"];
+
+    var myContents =
+        contents.map((content) => Category.fromJSON(content)).toList();
+    var newCategories = List<Category>.from(myContents);
+
+    setState(() {
+      selectedCategory = newCategories.first;
+      categories = newCategories;
+    });
+
+    _fetch();
+  }
+
   void _fetch() async {
-    var lowerCategory = selectedCategory.toLowerCase();
+    var lowerCategory = selectedCategory!.id.toLowerCase();
     var url = Uri.parse(
         "https://himaratsu-photos.microcms.io/api/v1/photos?limit=50&filters=category%5Bequals%5D$lowerCategory");
     final result = await http.get(url, headers: {
@@ -447,4 +473,14 @@ class Photo {
   String getImageUrl(width) {
     return photo.toString() + "?width=$width&q=75";
   }
+}
+
+class Category {
+  final String id;
+
+  final String name;
+
+  Category.fromJSON(Map<String, dynamic> json)
+      : id = json['id'],
+        name = json['name'];
 }
