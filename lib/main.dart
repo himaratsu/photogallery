@@ -1,11 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:html' as html;
+import 'package:http/http.dart' as http;
+// import 'dart:html' as html;
 
 void main() {
   runApp(const MyApp());
@@ -35,8 +36,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  List<Photo> items = [];
+  List<Photo> photos = [];
   Photo? showingPhoto;
+  bool switchPhotoContextOpen = true;
   Photo? hoverPhoto;
 
   String selectedCategory = "Kyoto";
@@ -48,8 +50,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _fetch();
 
     _animationController = AnimationController(
-        duration: const Duration(milliseconds: 230),
-        vsync: this);
+        duration: const Duration(milliseconds: 230), vsync: this);
 
     super.initState();
   }
@@ -67,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     var isSmallDevice = width <= 500;
 
     List<Widget> list =
-        items.map((item) => _simplePhotoNetworkItem(item)).toList();
+        photos.map((item) => _simplePhotoNetworkItem(item)).toList();
     var grid = GridView.extent(
         maxCrossAxisExtent: 132,
         padding: const EdgeInsets.all(4),
@@ -137,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               padding: const EdgeInsets.only(bottom: 32),
             ),
             onTap: () {
-              html.window.open('https://twitter.com/himara2', 'new tab');
+              // html.window.open('https://twitter.com/himara2', 'new tab');
             },
           ),
         ),
@@ -183,6 +184,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
         ),
         onTap: () {
+          switchPhotoContextOpen = true;
           setState(
             () {
               showingPhoto = photo;
@@ -194,8 +196,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Widget _expansionItem(Photo photo, BuildContext context) {
-    final animation = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(
+    int duration = switchPhotoContextOpen ? 230 : 0;
+    _animationController = AnimationController(
+        duration: Duration(milliseconds: duration), vsync: this);
+
+    final animation =
+        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
@@ -230,8 +236,56 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             ),
                             width: width,
                             height: height,
-                            child: Image.network(photo.getImageUrl(width * 1.5),
-                                fit: BoxFit.cover, width: width),
+                            child: Stack(
+                              children: <Widget>[
+                                Positioned.fill(
+                                  child: Image.network(
+                                      photo.getImageUrl(width * 1.5),
+                                      fit: BoxFit.cover,
+                                      width: width),
+                                ),
+                                if (_shouldShowPrev())
+                                  Positioned.fill(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Container(
+                                        color: Colors.grey.withOpacity(0.26),
+                                        child: IconButton(
+                                          icon: Image.asset(
+                                              'images/left_arrow.png',
+                                              color: Colors.white),
+                                          iconSize: 48,
+                                          onPressed: () {
+                                            _showPrev();
+                                          },
+                                        ),
+                                        width: 60,
+                                        height: 120,
+                                      ),
+                                    ),
+                                  ),
+                                if (_shouldShowNext())
+                                  Positioned.fill(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Container(
+                                        color: Colors.grey.withOpacity(0.26),
+                                        child: IconButton(
+                                          icon: Image.asset(
+                                              'images/right_arrow.png',
+                                              color: Colors.white),
+                                          iconSize: 48,
+                                          onPressed: () {
+                                            _showNext();
+                                          },
+                                        ),
+                                        width: 60,
+                                        height: 120,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 32),
                           SelectableText(
@@ -276,6 +330,60 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
+  void _showPrev() {
+    if (showingPhoto != null) {
+      var currentIndex = photos.indexOf(showingPhoto!);
+      if (currentIndex < 1) {
+        return;
+      }
+      var prevIndex = currentIndex - 1;
+      switchPhotoContextOpen = false;
+      setState(() {
+        showingPhoto = photos[prevIndex];
+      });
+    }
+  }
+
+  void _showNext() {
+    if (showingPhoto != null) {
+      var currentIndex = photos.indexOf(showingPhoto!);
+      if (photos.length <= currentIndex + 1) {
+        return;
+      }
+      var nextIndex = currentIndex + 1;
+      switchPhotoContextOpen = false;
+      setState(() {
+        showingPhoto = photos[nextIndex];
+      });
+    }
+  }
+
+  bool _shouldShowPrev() {
+    if (showingPhoto == null) {
+      return false;
+    }
+
+    var currentIndex = photos.indexOf(showingPhoto!);
+    if (currentIndex < 1) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  bool _shouldShowNext() {
+    if (showingPhoto == null) {
+      return false;
+    }
+
+    var currentIndex = photos.indexOf(showingPhoto!);
+    if (photos.length <= currentIndex + 1) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   void _fetch() async {
     var lowerCategory = selectedCategory.toLowerCase();
     var url = Uri.parse(
@@ -290,7 +398,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     var newItems = List<Photo>.from(myContents);
 
     setState(() {
-      items = newItems;
+      photos = newItems;
     });
   }
 }
