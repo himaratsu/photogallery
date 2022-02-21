@@ -6,7 +6,7 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
-// import 'dart:html' as html;
+import 'dart:html' as html;
 
 void main() {
   runApp(const MyApp());
@@ -83,7 +83,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         color: Colors.white,
       ),
       value: selectedCategory,
-      items: <String>['NewYear2022', 'Kyoto', 'Kobe', 'Ito', 'Other'].map((String value) {
+      items: <String>['NewYear2022', 'Kyoto', 'Kobe', 'Ito', 'Other']
+          .map((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value,
@@ -138,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               padding: const EdgeInsets.only(bottom: 32),
             ),
             onTap: () {
-              // html.window.open('https://twitter.com/himara2', 'new tab');
+              html.window.open('https://twitter.com/himara2', 'new tab');
             },
           ),
         ),
